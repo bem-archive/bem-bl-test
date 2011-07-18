@@ -3,11 +3,11 @@
 
 (function() {
 
-BEM.DOM.decl({ name: 'b-link', modName: 'togcolour', modVal: 'yes'}, {
+BEM.DOM.decl({ name: 'b-link', modName: 'togcolor', modVal: 'yes'}, {
 
     _onClick : function(e) {
         this.__base.apply(this, arguments);
-        this.toggleMod('colour', 'red', 'green')
+        this.toggleMod('color', 'red', 'green')
     }
 
 });
