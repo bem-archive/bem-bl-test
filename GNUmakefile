@@ -8,7 +8,7 @@ all:: $(patsubst %.bemjson.js,%.html,$(wildcard pages/*/*.bemjson.js))
 		-t bem-bl/blocks-desktop/i-bem/bem/techs/html.js \
 		$(*F)
 
-BEM_BUILD=bem buld \
+BEM_BUILD=bem build \
 	-l bem-bl/blocks-common/ \
 	-l bem-bl/blocks-desktop/ \
 	-l blocks/ \
