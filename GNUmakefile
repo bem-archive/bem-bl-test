@@ -1,13 +1,6 @@
 all:: bem-bl
 all:: $(patsubst %.bemjson.js,%.html,$(wildcard pages/*/*.bemjson.js))
 
-.SECONDARY:
-%.html: %.bemhtml.js %.css %.js
-	@bem create block \
-		-l pages/ \
-		-t bem-bl/blocks-desktop/i-bem/bem/techs/html.js \
-		$(*F)
-
 BEM_BUILD=bem build \
 	-l bem-bl/blocks-common/ \
 	-l bem-bl/blocks-desktop/ \
@@ -17,6 +10,14 @@ BEM_BUILD=bem build \
 	-o $(@D) \
 	-n $(*F)
 
+BEM_CREATE=bem create block \
+		-l pages \
+		-t $1 \
+		$(*F)
+
+%.html: %.bemhtml.js %.css %.js
+	$(call BEM_CREATE,bem-bl/blocks-desktop/i-bem/bem/techs/html.js)
+
 %.bemhtml.js: %.deps.js
 	$(call BEM_BUILD,bem-bl/blocks-desktop/i-bem/bem/techs/bemhtml.js)
 
@@ -24,11 +25,13 @@ BEM_BUILD=bem build \
 	$(call BEM_BUILD,deps.js)
 
 %.bemdecl.js: %.bemjson.js
-	$(call BEM_BUILD,bemdecl.js) # TODO: bem create
+	$(call BEM_CREATE,bemdecl.js)
 
+.PRECIOUS: %.css
 %.css: %.deps.js
 	$(call BEM_BUILD,css)
 
+.PRECIOUS: %.js
 %.js: %.deps.js
 	$(call BEM_BUILD,js)
 
