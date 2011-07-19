@@ -1,4 +1,5 @@
-all: $(patsubst %.bemjson.js,%.html,$(wildcard pages/*/*.bemjson.js))
+all:: bem-bl
+all:: $(patsubst %.bemjson.js,%.html,$(wildcard pages/*/*.bemjson.js))
 
 BEM_BUILD=bem build \
 	-l bem-bl/blocks-common/ \
@@ -43,7 +44,7 @@ DO_GIT=echo -- git $1 $2; \
 			git clone $1.git $2; \
 	fi
 
-bem-bl: FORCE
+bem-bl:
 	$(call DO_GIT,git://github.com/toivonen/bem-bl.git,$@)
 
-.PHONY: all FORCE
+.PHONY: all
