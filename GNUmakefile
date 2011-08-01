@@ -15,7 +15,7 @@ BEM_CREATE=bem create block \
 		-t $1 \
 		$(*F)
 
-%.html: %.bemhtml.js %.css %.js
+%.html: %.bemhtml.js %.css %.js %.ie.css
 	$(call BEM_CREATE,bem-bl/blocks-desktop/i-bem/bem/techs/html.js)
 
 %.bemhtml.js: %.deps.js
@@ -30,6 +30,10 @@ BEM_CREATE=bem create block \
 .PRECIOUS: %.css
 %.css: %.deps.js
 	$(call BEM_BUILD,css)
+
+.PRECIOUS: %.ie.css
+%.ie.css: %.deps.js
+	$(call BEM_BUILD,ie.css)
 
 .PRECIOUS: %.js
 %.js: %.deps.js
