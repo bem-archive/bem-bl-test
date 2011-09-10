@@ -1,10 +1,10 @@
 ({
     block: 'b-page',
-    title: 'b-link',
+    title: 'Pseudo link',
     head: [
         { elem: 'css', url: 'example.css'},
-        { elem: 'css', url: 'example.ie.css', ie: true },
-        { elem : 'js', url: '//yandex.st/jquery/1.6.2/jquery.min.js' },
+        { elem: 'css', url: 'example.ie.css', ie: 'lt IE 8' },
+        { block: 'i-jquery', elem: 'core' },
         { elem: 'js', url: 'example.js' }
     ],
     content: [
@@ -13,8 +13,8 @@
             mods : { pseudo : 'yes', togcolor : 'yes', color: 'green' },
             url: '#',
             target: '_blank',
-            title: 'Кликни меня',
-            content : 'Псевдоссылка, меняющая цвет по клику'
+            title: 'Click me',
+            content : 'This pseudo link changes its color after click'
         }
     ]
 })
