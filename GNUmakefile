@@ -13,7 +13,7 @@ BEM_BUILD=bem build \
 
 BEM_CREATE=bem create block \
 		-l pages \
-		-t $1 \
+		-T $1 \
 		$(*F)
 
 %.html: %.bemhtml.js %.css %.js %.ie.css %.bemhtml.js
