@@ -14,10 +14,11 @@ BEM_BUILD=bem build \
 BEM_CREATE=bem create block \
 		-l pages \
 		-T $1 \
+		$2 \
 		$(*F)
 
 %.html: %.bemhtml.js %.css %.js %.ie.css %.bemhtml.js
-	$(call BEM_CREATE,bem-bl/blocks-common/i-bem/bem/techs/html.js)
+	$(call BEM_CREATE,bem-bl/blocks-common/i-bem/bem/techs/html.js,--force)
 
 .PRECIOUS: %.bemhtml.js
 %.bemhtml.js: %.deps.js
