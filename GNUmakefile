@@ -14,6 +14,7 @@ BEM_BUILD=bem build \
 BEM_CREATE=bem create block \
 		-l pages \
 		-T $1 \
+		--force \
 		$2 \
 		$(*F)
 
