@@ -1,7 +1,9 @@
 all:: bem-bl
 all:: $(patsubst %.bemjson.js,%.html,$(wildcard pages/*/*.bemjson.js))
 
-BEM_BUILD=bem build \
+BEM=bem
+
+BEM_BUILD=$(BEM) build \
 	-l bem-bl/blocks-common/ \
 	-l bem-bl/blocks-desktop/ \
 	-l blocks/ \
@@ -11,9 +13,10 @@ BEM_BUILD=bem build \
 	-o $(@D) \
 	-n $(*F)
 
-BEM_CREATE=bem create block \
+BEM_CREATE=$(BEM) create block \
 		-l pages \
 		-t $1 \
+		--force \
 		$(*F)
 
 %.html: %.bemhtml.js %.css %.js %.ie.css %.bemhtml.js
