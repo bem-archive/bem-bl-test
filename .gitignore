@@ -1,3 +1,5 @@
+*.iml
+node_modules/
 bem-bl
 pages/*/*.css
 pages/*/*.js
