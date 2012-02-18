@@ -16,13 +16,13 @@ exports.getGraph = function() {
     createPagesNode(graph);
     createAllNode(graph);
 
-    console.log(graph.toString());
+    console.log('== Graph on build start ==\n', graph.toString());
 
     return graph;
 };
 
 function createAllNode(graph) {
-    graph.setNode({}, 'all', ['pages', 'bem-bl']);
+    graph.setNode({}, 'all', null, ['pages*', 'bem-bl']);
 }
 
 function createBemBlNode(graph) {
@@ -30,13 +30,7 @@ function createBemBlNode(graph) {
 }
 
 function createPagesNode(graph) {
-    var node = {
-            run: function() {
-                console.log('Building pages');
-            }
-        },
-
-        levels = [
+    var levels = [
             'bem-bl/blocks-common/',
             'bem-bl/blocks-desktop/',
             'blocks/',
@@ -47,12 +41,13 @@ function createPagesNode(graph) {
         techHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/html.js'),
         techBemHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/bemhtml.js');
 
-    pagesFiles.push(graph.setNode(new BemCreateNode('pages', { block: 'example' }, 'bemdecl.js')));
-    pagesFiles.push(graph.setNode(new BemCreateNode('pages', { block: 'example' }, techHtml, 'html')));
-    pagesFiles.push(graph.setNode(new BemBuildNode(levels, 'pages/example/example.bemdecl.js', 'deps.js', 'deps.js', 'pages/example/example')));
-    pagesFiles.push(graph.setNode(new BemBuildNode(levels, 'pages/example/example.deps.js', techBemHtml, 'bemhtml.js', 'pages/example/example')));
+    //pagesFiles.push(graph.setNode(new BemCreateNode('pages', { block: 'example' }, 'bemdecl.js')));
+    //pagesFiles.push(graph.setNode(new BemCreateNode('pages', { block: 'example' }, techHtml, 'html')));
+    //pagesFiles.push(graph.setNode(new BemBuildNode(levels, 'pages/example/example.bemdecl.js', 'deps.js', 'deps.js', 'pages/example/example')));
+    //pagesFiles.push(graph.setNode(new BemBuildNode(levels, 'pages/example/example.deps.js', techBemHtml, 'bemhtml.js', 'pages/example/example')));
+    //graph.setNode({}, 'pages', null, pagesFiles);
 
-    graph.setNode(node, 'pages', pagesFiles);
+    graph.setNode(new PagesLevelNode('pages'));
 }
 
 function createPageNodes(graph, pagePath) {
@@ -93,7 +88,64 @@ var FileNode = INHERIT(Node, {
     },
 
     run: function() {
-        return this.__base.apply(this, arguments);
+        this.log(UTIL.format("[*] Run '%s'", this.getId()));
+        this.dumpLog();
+    }
+
+});
+
+var MagicNode = INHERIT(FileNode, {
+
+    getId: function() {
+        return this.path + '*';
+    }
+
+});
+
+var PagesLevelNode = INHERIT(MagicNode, {
+
+    run: function(ctx) {
+        if (ctx.graph.hasNode(this.path)) return;
+        this.__base();
+
+        ctx.plan.lock();
+
+        // TODO: scan this.path for pages
+        // TODO: generate targets for pages
+
+        // TODO: create real node for pages level
+        var parents = ctx.graph.parents[this.getId()],
+            node = ctx.graph.setNode(new FileNode(this.path), null, parents);
+
+        // TODO: link pages target with created pages level node
+        ctx.graph.setNode(new PageNode(PATH.join(this.path, 'example')), null, node);
+
+        console.log('== PagesLevelNode Graph ==\n', ctx.graph.toString());
+
+        ctx.plan.unlock();
+    }
+
+});
+
+var PageNode = INHERIT(MagicNode, {
+
+    run: function(ctx) {
+        if (ctx.graph.hasNode(this.path)) return;
+        this.__base();
+
+        ctx.plan.lock();
+
+        // TODO: generate targets for page files
+        // TODO: create real node for page
+
+        var parents = ctx.graph.parents[this.getId()],
+            node = ctx.graph.setNode(new FileNode(this.path), null, parents);
+
+        // TODO: link page files target with created page node
+
+        console.log('PageNode', ctx.graph.toString());
+
+        ctx.plan.unlock();
     }
 
 });
@@ -114,6 +166,8 @@ var BlocksLibraryNode = INHERIT(Node, {
         var _this = this,
             up = Q.defer(),
             cmd;
+
+        this.log(UTIL.format("[*] Run '%s'", this.getId()));
 
         if (PATH.existsSync(this.path)) {
             // git pull origin master
