@@ -30,6 +30,7 @@ function createBemBlNode(graph) {
 }
 
 function createPagesNode(graph) {
+    /*
     var levels = [
             'bem-bl/blocks-common/',
             'bem-bl/blocks-desktop/',
@@ -40,6 +41,7 @@ function createPagesNode(graph) {
         pagesFiles = [],
         techHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/html.js'),
         techBemHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/bemhtml.js');
+    */
 
     //pagesFiles.push(graph.setNode(new BemCreateNode('pages', { block: 'example' }, 'bemdecl.js')));
     //pagesFiles.push(graph.setNode(new BemCreateNode('pages', { block: 'example' }, techHtml, 'html')));
