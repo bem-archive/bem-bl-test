@@ -3,78 +3,68 @@ var Q = require('qq'),
     PROTO = require('proto'),
     BEM = require('bem').api,
     createLevel = require('bem/lib/level').createLevel,
-    createTech = require('bem/lib/tech').createTech,
     Context = require('bem/lib/context').Context,
     PATH = require('path'),
     CP = require('child_process'),
     UTIL = require('util');
 
 exports.getGraph = function() {
-    var graph = PROTO.newGraph();
-
-    createBemBlNode(graph);
-    createPagesNode(graph);
-    createAllNode(graph);
+    var graph = PROTO.newGraph(),
+        all = graph.setNode(new Node('all')),
+        build = graph.setNode(new Node('build'), null, all),
+        libs = createBlockLibrariesNodes(graph, build);
+    createPagesLevelsNodes(graph, build, libs);
 
     console.log('== Graph on build start ==\n', graph.toString());
 
     return graph;
 };
 
-function createAllNode(graph) {
-    graph.setNode({}, 'all', null, ['pages*', 'bem-bl']);
+function createBlockLibrariesNodes(graph, parent) {
+    return [
+        graph.setNode(new BlocksLibraryNode('bem-bl', 'git://github.com/bem/bem-bl.git'), null, parent)
+    ];
 }
 
-function createBemBlNode(graph) {
-    graph.setNode(new BlocksLibraryNode('bem-bl', 'git://github.com/bem/bem-bl.git'), 'bem-bl');
-}
-
-function createPagesNode(graph) {
-    /*
-    var levels = [
-            'bem-bl/blocks-common/',
-            'bem-bl/blocks-desktop/',
-            'blocks/',
-            'pages/example/blocks'
-        ],
-
-        pagesFiles = [],
-        techHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/html.js'),
-        techBemHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/bemhtml.js');
-    */
-
-    //pagesFiles.push(graph.setNode(new BemCreateNode('pages', { block: 'example' }, 'bemdecl.js')));
-    //pagesFiles.push(graph.setNode(new BemCreateNode('pages', { block: 'example' }, techHtml, 'html')));
-    //pagesFiles.push(graph.setNode(new BemBuildNode(levels, 'pages/example/example.bemdecl.js', 'deps.js', 'deps.js', 'pages/example/example')));
-    //pagesFiles.push(graph.setNode(new BemBuildNode(levels, 'pages/example/example.deps.js', techBemHtml, 'bemhtml.js', 'pages/example/example')));
-    //graph.setNode({}, 'pages', null, pagesFiles);
-
-    graph.setNode(new PagesLevelNode('pages'));
-}
-
-function createPageNodes(graph, pagePath) {
-    var techsDep = {
-        'bemdecl.js': ['bemjson.js'],
-        'deps.js': ['bemdecl.js'],
-        'html': ['bemjson.js', 'bemhtml.js'],
-        'bemhtml.js': ['deps.js'],
-        'css': ['deps.js'],
-        'ie.css': ['deps.js'],
-        'js': ['deps.js']
-    };
+function createPagesLevelsNodes(graph, parent, children) {
+    return [
+        graph.setNode(new PagesLevelNode('pages'), null, parent, children)
+    ];
 }
 
 var Node = INHERIT({
 
-    run: function() {},
+    __constructor: function(id) {
+        this.id = id;
+    },
+
+    getId: function() {
+        return this.id;
+    },
+
+    run: function(ctx) {
+        var _this = this;
+        console.log("[*] Run '%s'", this.getId());
+        this.log(UTIL.format("[=] Log of '%s'", this.getId()));
+        return Q.when(this.make(ctx), function(res) {
+            _this.dumpLog();
+            return res;
+        });
+    },
+
+    make: function(ctx) {},
 
     log: function(messages) {
         messages = Array.isArray(messages)? messages : [messages];
         this.messages = (this.messages || []).concat(messages);
     },
 
+    formatLog: function() {
+        return (this.messages || []).join('\n');
+    },
+
     dumpLog: function() {
-        console.error((this.messages || []).join('\n'));
+        console.log(this.formatLog());
     }
 
 });
@@ -83,46 +73,64 @@ var FileNode = INHERIT(Node, {
 
     __constructor: function(path) {
         this.path = path;
+        this.__base(path);
     },
 
-    getId: function() {
-        return this.path;
-    },
-
-    run: function() {
-        this.log(UTIL.format("[*] Run '%s'", this.getId()));
-        this.dumpLog();
-    }
+    // TODO: make() must check file existance
+    make: function() {}
 
 });
 
 var MagicNode = INHERIT(FileNode, {
 
     getId: function() {
-        return this.path + '*';
+        return this.id + '*';
+    },
+
+    run: function(ctx) {
+        if (ctx.graph.hasNode(this.path)) return;
+        return this.__base(ctx);
     }
 
 });
 
 var PagesLevelNode = INHERIT(MagicNode, {
 
-    run: function(ctx) {
-        if (ctx.graph.hasNode(this.path)) return;
-        this.__base();
+    __constructor: function(level) {
+        this.level = typeof level == 'string'? createLevel(level) : level;
+        this.__base(PATH.basename(this.level.dir));
+    },
 
+    make: function(ctx) {
         ctx.plan.lock();
 
-        // TODO: scan this.path for pages
-        // TODO: generate targets for pages
-
-        // TODO: create real node for pages level
+        // create real node for pages level
         var parents = ctx.graph.parents[this.getId()],
-            node = ctx.graph.setNode(new FileNode(this.path), null, parents);
+            pageLevelNode = ctx.graph.setNode(new FileNode(this.path), null, parents);
 
-        // TODO: link pages target with created pages level node
-        ctx.graph.setNode(new PageNode(PATH.join(this.path, 'example')), null, node);
+        // scan level for pages
+        var _this = this,
+            decl = this.level.getDeclByIntrospection();
 
-        console.log('== PagesLevelNode Graph ==\n', ctx.graph.toString());
+        // generate targets for pages
+        decl.forEach(function(block) {
+            // generate FileNode based page targets for emply pages
+            // (without techs implementation)
+            var pageNode;
+            if (block.techs) {
+                pageNode = ctx.graph.setNode(new PageNode(_this.level, block.name), null, pageLevelNode);
+            } else {
+                pageNode = ctx.graph.setNode(new FileNode(PATH.join(_this.level, block.name)), null, pageLevelNode);
+            }
+
+            // generate targets for subpages
+            if (block.elems) block.elems.forEach(function(elem) {
+                ctx.graph.setNode(new PageNode(_this.level, block.name, elem.name), null, pageNode);
+            });
+        });
+
+//        console.log('== PagesLevelNode Graph ==\n', ctx.graph.toString());
+//        console.log('== PagesLevelNode Plan ==\n', ctx.plan.toString());
 
         ctx.plan.unlock();
     }
@@ -131,23 +139,124 @@ var PagesLevelNode = INHERIT(MagicNode, {
 
 var PageNode = INHERIT(MagicNode, {
 
-    run: function(ctx) {
+    __constructor: function(level, pageName, subPageName) {
+        this.level = typeof level == 'string'? createLevel(level) : level;
+        this.item = { block: pageName };
+
+        if (subPageName) this.item.elem = subPageName;
+
+        this.__base(PATH.dirname(this.getNodePrefix()));
+    },
+
+    make: function(ctx) {
         if (ctx.graph.hasNode(this.path)) return;
         this.__base();
 
         ctx.plan.lock();
 
-        // TODO: generate targets for page files
-        // TODO: create real node for page
-
+        // create real node for page
         var parents = ctx.graph.parents[this.getId()],
-            node = ctx.graph.setNode(new FileNode(this.path), null, parents);
+            pageNode = ctx.graph.setNode(new FileNode(this.path), null, parents);
 
-        // TODO: link page files target with created page node
+        // generate targets for page files
+        for (var tech in this.getTechDeps()) {
+            var fileNode = this.createNode(ctx, tech);
+            ctx.graph.link(fileNode, pageNode);
+        }
 
-        console.log('PageNode', ctx.graph.toString());
+        // link targets for page files with each other
+        this.linkNodes(ctx);
+
+//        console.log('=== PageNode Graph ===\n', ctx.graph.toString());
+//        console.log('=== PageNode Plan ===\n', ctx.plan.toString());
 
         ctx.plan.unlock();
+    },
+
+    createNode: function(ctx, tech) {
+        if (this['create-node-' + tech]) {
+            return this['create-node-' + tech](ctx, tech);
+        }
+        return ctx.graph.setNode(new FileNode(this.getPath(tech)));
+    },
+
+    linkNodes: function(ctx) {
+        var deps = this.getTechDeps();
+        for (var tech in deps) {
+            for (var i = 0, l = deps[tech].length; i < l; i++) {
+                ctx.graph.link(this.getPath(deps[tech][i]), this.getPath(tech));
+            }
+        }
+    },
+
+    getPath: function(tech) {
+        // TODO: use Tech object to construct paths
+        return this.getNodePrefix() + '.' + tech;
+    },
+
+    getTechDeps: function() {
+        return {
+            'bemjson.js': [],
+            'bemdecl.js': ['bemjson.js'],
+            'deps.js': ['bemdecl.js'],
+            'html': ['bemjson.js', 'bemhtml.js'],
+            'bemhtml.js': ['deps.js'],
+            'css': ['deps.js'],
+            'ie.css': ['deps.js'],
+            'js': ['deps.js']
+        };
+    },
+
+    getNodePrefix: function() {
+        if (!this._nodeSuffix) {
+            this._nodeSuffix = PATH.join(PATH.basename(this.level.dir), this.level.getRelByObj(this.item));
+        }
+        return this._nodeSuffix;
+    },
+
+    getLevels: function() {
+        // TODO: move to config
+        // TODO: page level blocks: 'pages/example/blocks'
+        return [
+            'bem-bl/blocks-common/',
+            'bem-bl/blocks-desktop/',
+            'blocks/'
+        ];
+    },
+
+    getBemBuildNode: function(techName, techPath, declTech) {
+        // TODO: page level blocks: 'pages/example/blocks'
+        return new BemBuildNode(this.getLevels(), this.getPath(declTech), techPath, techName, this.getNodePrefix());
+    },
+
+    'create-node-bemdecl.js': function(ctx, tech) {
+        return ctx.graph.setNode(new BemCreateNode(this.level, this.item, tech));
+    },
+
+    'create-node-deps.js': function(ctx, tech) {
+        return ctx.graph.setNode(this.getBemBuildNode(tech, tech, 'bemdecl.js'));
+    },
+
+    'create-node-html': function(ctx, tech) {
+        var techHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/html');
+        return ctx.graph.setNode(new BemCreateNode(this.level, this.item, techHtml, tech));
+    },
+
+    'create-node-bemhtml.js': function(ctx, tech) {
+        var techBemHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/bemhtml.js');
+        return ctx.graph.setNode(this.getBemBuildNode(tech, techBemHtml, 'deps.js'));
+    },
+
+    'create-node-js': function(ctx, tech) {
+        return ctx.graph.setNode(this.getBemBuildNode(tech, tech, 'deps.js'));
+    },
+
+    'create-node-css': function(ctx, tech) {
+        return ctx.graph.setNode(this.getBemBuildNode(tech, tech, 'deps.js'));
+    },
+
+    'create-node-ie.css': function(ctx, tech) {
+        return ctx.graph.setNode(this.getBemBuildNode(tech, tech, 'deps.js'));
     }
 
 });
@@ -158,25 +267,20 @@ var BlocksLibraryNode = INHERIT(Node, {
         this.path = path;
         this.repo = repo;
         this.treeish = treeish || 'master';
+        this.__base(this.path);
     },
 
-    getId: function() {
-        return this.path;
-    },
-
-    run: function() {
+    make: function() {
         var _this = this,
             up = Q.defer(),
             cmd;
 
-        this.log(UTIL.format("[*] Run '%s'", this.getId()));
-
         if (PATH.existsSync(this.path)) {
             // git pull origin master
-            cmd = UTIL.format('cd %s && git pull origin master', this.path);
+            cmd = UTIL.format('cd %s && git pull --progress origin master', this.path);
         } else {
             // git clone repo path
-            cmd = UTIL.format('git clone %s %s', this.repo, this.path);
+            cmd = UTIL.format('git clone --progress %s %s', this.repo, this.path);
         }
 
         this.log(cmd);
@@ -184,8 +288,7 @@ var BlocksLibraryNode = INHERIT(Node, {
             stdout && _this.log(stdout);
             stderr && _this.log(stderr);
 
-            if (err) return up.reject(err);
-            up.resolve();
+            err? up.reject(err) : up.resolve();
         });
 
         return Q.when(up.promise, function() {
@@ -198,10 +301,7 @@ var BlocksLibraryNode = INHERIT(Node, {
                 stdout && _this.log(stdout);
                 stderr && _this.log(stderr);
 
-                if (err) return co.reject(err);
-                co.resolve();
-
-                _this.dumpLog();
+                err? co.reject(err) : co.resolve();
             });
             return co.promise;
         });
@@ -209,28 +309,23 @@ var BlocksLibraryNode = INHERIT(Node, {
 
 });
 
-var BemCreateNode = INHERIT(Node, {
+var BemCreateNode = INHERIT(FileNode, {
 
-    __constructor: function(levelPath, item, tech, techName) {
+    __constructor: function(level, item, tech, techName) {
+        this.level = typeof level == 'string'? createLevel(level) : level;
         this.item = item;
-        this.levelPath = levelPath;
-        this.level = createLevel(levelPath);
         this.tech = this.level.getTech(techName, tech);
+
+        var prefix = PATH.join(PATH.basename(this.level.dir), this.level.getRelByObj(this.item));
+        this.__base(this.tech.getPath(prefix));
     },
 
-    getId: function() {
-        // TODO: fix getting of relative path to file to more elegant way
-        var p = (new Array(this.levelPath.split('/').length)).join('../');
-        return this.tech.getPath(PATH.relative(p, this.buildLevelPath()));
-    },
-
-    run: function() {
+    make: function() {
         var p = this.parseItem(this.item);
-        p.opts.levelDir = this.levelPath;
+        p.opts.levelDir = this.level.dir;
         p.opts.forceTech = this.tech.getTechPath();
 
         this.log(UTIL.format('bem.create.%s(\n %j,\n %j\n)', p.cmd, p.opts, p.args));
-        this.dumpLog();
 
         return BEM.create[p.cmd](p.opts, p.args);
     },
@@ -256,32 +351,11 @@ var BemCreateNode = INHERIT(Node, {
             opts: opts,
             args: args
         };
-    },
-
-    buildLevelPath: function() {
-        var i = this.item, getter, args;
-        if (i.block) {
-            getter = 'block';
-            args = [i.block];
-            if (i.elem) {
-                getter = 'elem';
-                args.push(i.elem);
-            }
-            if (i.mod) {
-                getter += '-mod';
-                args.push(i.mod);
-                if (i.val) {
-                    getter += '-val';
-                    args.push(i.val);
-                }
-            }
-            return this.level.get(getter, args);
-        }
     }
 
 });
 
-var BemBuildNode = INHERIT(Node, {
+var BemBuildNode = INHERIT(FileNode, {
 
     __constructor: function(levels, decl, techPath, techName, output) {
         this.levelsPaths = levels;
@@ -294,22 +368,20 @@ var BemBuildNode = INHERIT(Node, {
 
         var ctx = new Context(this.levels);
         this.tech = ctx.getTech(techName, techPath);
+
+        this.__base(this.tech.getPath(this.output));
     },
 
-    getId: function() {
-        return this.tech.getPath(this.output);
-    },
-
-    run: function() {
+    make: function() {
         var opts = {
             level: this.levelsPaths,
             declaration: this.decl,
             tech: this.techPath,
-            outputName: this.output
+            outputDir: PATH.dirname(this.output),
+            outputName: PATH.basename(this.output)
         };
 
         this.log(UTIL.format('bem.build(\n %j\n)', opts));
-        this.dumpLog();
 
         return BEM.build(opts);
     }
