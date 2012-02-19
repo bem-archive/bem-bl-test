@@ -5,3 +5,4 @@ pages/*/*.css
 pages/*/*.js
 !pages/*/*.bemjson.js
 pages/*/*.html
+!level.js
