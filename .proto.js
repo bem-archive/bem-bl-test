@@ -9,7 +9,7 @@ var Q = require('qq'),
     UTIL = require('util');
 
 exports.getGraph = function() {
-    var graph = PROTO.newGraph(),
+    var graph = new PROTO.Graph(),
         all = graph.setNode(new Node('all')),
         build = graph.setNode(new Node('build'), null, all),
         libs = createBlockLibrariesNodes(graph, build);
