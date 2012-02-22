@@ -14,7 +14,7 @@ exports.getGraph = function() {
         all = graph.setNode(new Node('all')),
         build = graph.setNode(new Node('build'), all),
         libs = createBlockLibrariesNodes(graph, build);
-    createPagesLevelsNodes(graph, build, libs);
+    createBundlesLevelsNodes(graph, build, libs);
 
     console.log('== Graph on build start ==\n', graph.toString());
 
@@ -27,9 +27,9 @@ function createBlockLibrariesNodes(graph, parent) {
     ];
 }
 
-function createPagesLevelsNodes(graph, parent, children) {
+function createBundlesLevelsNodes(graph, parent, children) {
     return [
-        graph.setNode(new PagesLevelNode('pages'), parent, children)
+        graph.setNode(new BundlesLevelNode('pages'), parent, children)
     ];
 }
 
@@ -112,7 +112,7 @@ var MagicNode = INHERIT(FileNode, {
 
 });
 
-var PagesLevelNode = INHERIT(MagicNode, {
+var BundlesLevelNode = INHERIT(MagicNode, {
 
     __constructor: function(level) {
         this.level = typeof level == 'string'? createLevel(level) : level;
@@ -138,32 +138,32 @@ var PagesLevelNode = INHERIT(MagicNode, {
                 var pageNode;
                 // TODO: такие блоки и не попадут в инстроспекцию
                 if (block.techs) {
-                    pageNode = ctx.graph.setNode(new PageNode(_this.level, block.name), pageLevelNode);
+                    pageNode = ctx.graph.setNode(new BundleNode(_this.level, block.name), pageLevelNode);
                 } else {
                     pageNode = ctx.graph.setNode(new FileNode(PATH.join(_this.level, block.name)), pageLevelNode);
                 }
 
                 // generate targets for subpages
                 if (block.elems) block.elems.forEach(function(elem) {
-                    ctx.graph.setNode(new PageNode(_this.level, block.name, elem.name), pageNode);
+                    ctx.graph.setNode(new BundleNode(_this.level, block.name, elem.name), pageNode);
                 });
             });
 
         });
 
-//        console.log('== PagesLevelNode Graph ==\n', ctx.graph.toString());
-//        console.log('== PagesLevelNode Plan ==\n', ctx.plan.toString());
+//        console.log('== BundlesLevelNode Graph ==\n', ctx.graph.toString());
+//        console.log('== BundlesLevelNode Plan ==\n', ctx.plan.toString());
     }
 
 });
 
-var PageNode = INHERIT(MagicNode, {
+var BundleNode = INHERIT(MagicNode, {
 
-    __constructor: function(level, pageName, subPageName) {
+    __constructor: function(level, bundleName, subBundleName) {
         this.level = typeof level == 'string'? createLevel(level) : level;
-        this.item = { block: pageName };
+        this.item = { block: bundleName };
 
-        if (subPageName) this.item.elem = subPageName;
+        if (subBundleName) this.item.elem = subBundleName;
 
         this.__base(PATH.dirname(this.getNodePrefix()));
     },
@@ -190,8 +190,8 @@ var PageNode = INHERIT(MagicNode, {
 
         });
 
-//        console.log('=== PageNode Graph ===\n', ctx.graph.toString());
-//        console.log('=== PageNode Plan ===\n', ctx.plan.toString());
+//        console.log('=== BundleNode Graph ===\n', ctx.graph.toString());
+//        console.log('=== BundleNode Plan ===\n', ctx.plan.toString());
     },
 
     createNode: function(ctx, tech) {
