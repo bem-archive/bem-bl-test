@@ -46,7 +46,7 @@ var Node = INHERIT({
     run: function(ctx) {
         var _this = this;
         console.log("[*] Run '%s'", this.getId());
-        this.log(UTIL.format("[=] Log of '%s'", this.getId()));
+        this.log("[=] Log of '%s'", this.getId());
         return Q.when(this.make(ctx), function(res) {
             _this.dumpLog();
             return res;
@@ -57,7 +57,10 @@ var Node = INHERIT({
 
     log: function(messages) {
         messages = Array.isArray(messages)? messages : [messages];
-        this.messages = (this.messages || []).concat(messages);
+        var args = Array.prototype.slice.call(arguments, 1);
+        this.messages = (this.messages || []).concat(messages.map(function(message) {
+            return UTIL.format.apply(this, [message].concat(args));
+        }));
     },
 
     formatLog: function() {
@@ -350,7 +353,7 @@ var BemCreateNode = INHERIT(GeneratedFileNode, {
         p.opts.levelDir = this.level.dir;
         p.opts.forceTech = this.tech.getTechPath();
 
-        this.log(UTIL.format('bem.create.%s(\n %j,\n %j\n)', p.cmd, p.opts, p.args));
+        this.log('bem.create.%s(\n %j,\n %j\n)', p.cmd, p.opts, p.args);
 
         return BEM.create[p.cmd](p.opts, p.args);
     },
@@ -406,7 +409,7 @@ var BemBuildNode = INHERIT(GeneratedFileNode, {
             outputName: PATH.basename(this.output)
         };
 
-        this.log(UTIL.format('bem.build(\n %j\n)', opts));
+        this.log('bem.build(\n %j\n)', opts);
 
         return BEM.build(opts);
     }
