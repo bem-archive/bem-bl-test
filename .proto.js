@@ -77,12 +77,18 @@ var FileNode = INHERIT(Node, {
         this.__base(path);
     },
 
-    // TODO: make() must check file existance
-    make: function() {}
+    make: function() {
+        var _this = this;
+        return QFS.exists(this.getId()).then(function(exists) {
+            if (!exists) return Q.reject(UTIL.format("Path %j doesn't exist", _this.getId()));
+        });
+    }
 
 });
 
 var GeneratedFileNode = INHERIT(FileNode, {
+
+    make: function() {},
 
     clean: function() {
         var _this = this;
@@ -170,7 +176,6 @@ var BundleNode = INHERIT(MagicNode, {
 
     make: function(ctx) {
         if (ctx.graph.hasNode(this.path)) return;
-        this.__base();
 
         var _this = this;
         ctx.graph.withLock(function() {
