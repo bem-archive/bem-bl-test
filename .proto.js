@@ -1,4 +1,5 @@
 var Q = require('qq'),
+    QFS = require('q-fs'),
     INHERIT = require('inherit'),
     PROTO = require('proto'),
     BEM = require('bem').api,
@@ -81,6 +82,18 @@ var FileNode = INHERIT(Node, {
 
 });
 
+var GeneratedFileNode = INHERIT(FileNode, {
+
+    clean: function() {
+        return QFS.remove(this.path)
+            .then(function() {
+                console.log('Removed %j', _this.getId());
+            })
+            .fail(function() {});
+    }
+
+});
+
 var MagicNode = INHERIT(FileNode, {
 
     getId: function() {
@@ -90,6 +103,10 @@ var MagicNode = INHERIT(FileNode, {
     run: function(ctx) {
         if (ctx.graph.hasNode(this.path)) return;
         return this.__base(ctx);
+    },
+
+    clean: function(ctx) {
+        return this.run(ctx);
     }
 
 });
@@ -102,37 +119,39 @@ var PagesLevelNode = INHERIT(MagicNode, {
     },
 
     make: function(ctx) {
-        ctx.plan.lock();
+        var _this = this;
 
-        // create real node for pages level
-        var parents = ctx.graph.parents[this.getId()],
-            pageLevelNode = ctx.graph.setNode(new FileNode(this.path), null, parents);
+        ctx.graph.withLock(function() {
 
-        // scan level for pages
-        var _this = this,
-            decl = this.level.getDeclByIntrospection();
+            // create real node for pages level
+            var parents = ctx.graph.parents[_this.getId()],
+                pageLevelNode = ctx.graph.setNode(new FileNode(_this.path), null, parents),
 
-        // generate targets for pages
-        decl.forEach(function(block) {
-            // generate FileNode based page targets for emply pages
-            // (without techs implementation)
-            var pageNode;
-            if (block.techs) {
-                pageNode = ctx.graph.setNode(new PageNode(_this.level, block.name), null, pageLevelNode);
-            } else {
-                pageNode = ctx.graph.setNode(new FileNode(PATH.join(_this.level, block.name)), null, pageLevelNode);
-            }
+                // scan level for pages
+                decl = _this.level.getDeclByIntrospection();
 
-            // generate targets for subpages
-            if (block.elems) block.elems.forEach(function(elem) {
-                ctx.graph.setNode(new PageNode(_this.level, block.name, elem.name), null, pageNode);
+            // generate targets for pages
+            decl.forEach(function(block) {
+                // generate FileNode based page targets for emply pages
+                // (without techs implementation)
+                var pageNode;
+                // TODO: такие блоки и не попадут в инстроспекцию
+                if (block.techs) {
+                    pageNode = ctx.graph.setNode(new PageNode(_this.level, block.name), null, pageLevelNode);
+                } else {
+                    pageNode = ctx.graph.setNode(new FileNode(PATH.join(_this.level, block.name)), null, pageLevelNode);
+                }
+
+                // generate targets for subpages
+                if (block.elems) block.elems.forEach(function(elem) {
+                    ctx.graph.setNode(new PageNode(_this.level, block.name, elem.name), null, pageNode);
+                });
             });
+
         });
 
 //        console.log('== PagesLevelNode Graph ==\n', ctx.graph.toString());
 //        console.log('== PagesLevelNode Plan ==\n', ctx.plan.toString());
-
-        ctx.plan.unlock();
     }
 
 });
@@ -152,25 +171,26 @@ var PageNode = INHERIT(MagicNode, {
         if (ctx.graph.hasNode(this.path)) return;
         this.__base();
 
-        ctx.plan.lock();
+        var _this = this;
+        ctx.graph.withLock(function() {
 
-        // create real node for page
-        var parents = ctx.graph.parents[this.getId()],
-            pageNode = ctx.graph.setNode(new FileNode(this.path), null, parents);
+            // create real node for page
+            var parents = ctx.graph.parents[_this.getId()],
+                pageNode = ctx.graph.setNode(new FileNode(_this.path), null, parents);
 
-        // generate targets for page files
-        for (var tech in this.getTechDeps()) {
-            var fileNode = this.createNode(ctx, tech);
-            ctx.graph.link(fileNode, pageNode);
-        }
+            // generate targets for page files
+            for (var tech in _this.getTechDeps()) {
+                var fileNode = _this.createNode(ctx, tech);
+                ctx.graph.link(fileNode, pageNode);
+            }
 
-        // link targets for page files with each other
-        this.linkNodes(ctx);
+            // link targets for page files with each other
+            _this.linkNodes(ctx);
+
+        });
 
 //        console.log('=== PageNode Graph ===\n', ctx.graph.toString());
 //        console.log('=== PageNode Plan ===\n', ctx.plan.toString());
-
-        ctx.plan.unlock();
     },
 
     createNode: function(ctx, tech) {
@@ -309,7 +329,7 @@ var BlocksLibraryNode = INHERIT(Node, {
 
 });
 
-var BemCreateNode = INHERIT(FileNode, {
+var BemCreateNode = INHERIT(GeneratedFileNode, {
 
     __constructor: function(level, item, tech, techName) {
         this.level = typeof level == 'string'? createLevel(level) : level;
@@ -355,7 +375,7 @@ var BemCreateNode = INHERIT(FileNode, {
 
 });
 
-var BemBuildNode = INHERIT(FileNode, {
+var BemBuildNode = INHERIT(GeneratedFileNode, {
 
     __constructor: function(levels, decl, techPath, techName, output) {
         this.levelsPaths = levels;
