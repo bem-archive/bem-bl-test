@@ -129,18 +129,17 @@ var BundlesLevelNode = INHERIT(MagicNode, {
     },
 
     make: function(ctx) {
-        var _this = this;
-
         ctx.graph.withLock(function() {
 
             // create real node for pages level
-            var parents = ctx.graph.parents[_this.getId()],
-                pageLevelNode = ctx.graph.setNode(new FileNode(_this.path), parents),
+            var parents = ctx.graph.parents[this.getId()],
+                pageLevelNode = ctx.graph.setNode(new FileNode(this.path), parents),
 
                 // scan level for pages
-                decl = _this.level.getDeclByIntrospection();
+                decl = this.level.getDeclByIntrospection();
 
             // generate targets for pages
+            var _this = this;
             decl.forEach(function(block) {
                 // generate FileNode based page targets for emply pages
                 // (without techs implementation)
@@ -158,7 +157,7 @@ var BundlesLevelNode = INHERIT(MagicNode, {
                 });
             });
 
-        });
+        }, this);
 
 //        console.log('== BundlesLevelNode Graph ==\n', ctx.graph.toString());
 //        console.log('== BundlesLevelNode Plan ==\n', ctx.plan.toString());
@@ -180,22 +179,21 @@ var BundleNode = INHERIT(MagicNode, {
     make: function(ctx) {
         if (ctx.graph.hasNode(this.path)) return;
 
-        var _this = this;
         ctx.graph.withLock(function() {
 
             // create real node for page
-            var parents = ctx.graph.parents[_this.getId()],
-                pageNode = ctx.graph.setNode(new FileNode(_this.path), parents);
+            var parents = ctx.graph.parents[this.getId()],
+                pageNode = ctx.graph.setNode(new FileNode(this.path), parents);
 
             // generate targets for page files
-            for (var tech in _this.getTechDeps()) {
-                ctx.graph.setNode(_this.createNode(ctx, tech), pageNode);
+            for (var tech in this.getTechDeps()) {
+                ctx.graph.setNode(this.createNode(ctx, tech), pageNode);
             }
 
             // link targets for page files with each other
-            _this.linkNodes(ctx);
+            this.linkNodes(ctx);
 
-        });
+        }, this);
 
 //        console.log('=== BundleNode Graph ===\n', ctx.graph.toString());
 //        console.log('=== BundleNode Plan ===\n', ctx.plan.toString());
