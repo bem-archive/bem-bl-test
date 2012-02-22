@@ -85,7 +85,8 @@ var FileNode = INHERIT(Node, {
 var GeneratedFileNode = INHERIT(FileNode, {
 
     clean: function() {
-        return QFS.remove(this.path)
+        var _this = this;
+        return QFS.remove(this.getId())
             .then(function() {
                 console.log('Removed %j', _this.getId());
             })
