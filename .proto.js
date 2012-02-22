@@ -12,7 +12,7 @@ var Q = require('qq'),
 exports.getGraph = function() {
     var graph = new PROTO.Graph(),
         all = graph.setNode(new Node('all')),
-        build = graph.setNode(new Node('build'), null, all),
+        build = graph.setNode(new Node('build'), all),
         libs = createBlockLibrariesNodes(graph, build);
     createPagesLevelsNodes(graph, build, libs);
 
@@ -23,13 +23,13 @@ exports.getGraph = function() {
 
 function createBlockLibrariesNodes(graph, parent) {
     return [
-        graph.setNode(new BlocksLibraryNode('bem-bl', 'git://github.com/bem/bem-bl.git'), null, parent)
+        graph.setNode(new BlocksLibraryNode('bem-bl', 'git://github.com/bem/bem-bl.git'), parent)
     ];
 }
 
 function createPagesLevelsNodes(graph, parent, children) {
     return [
-        graph.setNode(new PagesLevelNode('pages'), null, parent, children)
+        graph.setNode(new PagesLevelNode('pages'), parent, children)
     ];
 }
 
@@ -126,7 +126,7 @@ var PagesLevelNode = INHERIT(MagicNode, {
 
             // create real node for pages level
             var parents = ctx.graph.parents[_this.getId()],
-                pageLevelNode = ctx.graph.setNode(new FileNode(_this.path), null, parents),
+                pageLevelNode = ctx.graph.setNode(new FileNode(_this.path), parents),
 
                 // scan level for pages
                 decl = _this.level.getDeclByIntrospection();
@@ -138,14 +138,14 @@ var PagesLevelNode = INHERIT(MagicNode, {
                 var pageNode;
                 // TODO: такие блоки и не попадут в инстроспекцию
                 if (block.techs) {
-                    pageNode = ctx.graph.setNode(new PageNode(_this.level, block.name), null, pageLevelNode);
+                    pageNode = ctx.graph.setNode(new PageNode(_this.level, block.name), pageLevelNode);
                 } else {
-                    pageNode = ctx.graph.setNode(new FileNode(PATH.join(_this.level, block.name)), null, pageLevelNode);
+                    pageNode = ctx.graph.setNode(new FileNode(PATH.join(_this.level, block.name)), pageLevelNode);
                 }
 
                 // generate targets for subpages
                 if (block.elems) block.elems.forEach(function(elem) {
-                    ctx.graph.setNode(new PageNode(_this.level, block.name, elem.name), null, pageNode);
+                    ctx.graph.setNode(new PageNode(_this.level, block.name, elem.name), pageNode);
                 });
             });
 
@@ -177,7 +177,7 @@ var PageNode = INHERIT(MagicNode, {
 
             // create real node for page
             var parents = ctx.graph.parents[_this.getId()],
-                pageNode = ctx.graph.setNode(new FileNode(_this.path), null, parents);
+                pageNode = ctx.graph.setNode(new FileNode(_this.path), parents);
 
             // generate targets for page files
             for (var tech in _this.getTechDeps()) {
