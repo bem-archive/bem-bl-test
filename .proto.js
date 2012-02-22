@@ -44,16 +44,19 @@ var Node = INHERIT({
     },
 
     run: function(ctx) {
-        var _this = this;
-        console.log("[*] Run '%s'", this.getId());
-        this.log("[=] Log of '%s'", this.getId());
-        return Q.when(this.make(ctx), function(res) {
+        var _this = this,
+            method = ctx.method || 'make';
+        console.log("[*] %s '%s'", method, this.getId());
+        this.log("[=] Log of %s '%s'", method, this.getId());
+        return Q.invoke(this, method, ctx).then(function(res) {
             _this.dumpLog();
             return res;
         });
     },
 
     make: function(ctx) {},
+
+    clean: function(ctx) {},
 
     log: function(messages) {
         messages = Array.isArray(messages)? messages : [messages];
@@ -116,7 +119,7 @@ var MagicNode = INHERIT(FileNode, {
     },
 
     clean: function(ctx) {
-        return this.run(ctx);
+        return this.make(ctx);
     }
 
 });
