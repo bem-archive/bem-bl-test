@@ -181,8 +181,7 @@ var BundleNode = INHERIT(MagicNode, {
 
             // generate targets for page files
             for (var tech in _this.getTechDeps()) {
-                var fileNode = _this.createNode(ctx, tech);
-                ctx.graph.link(fileNode, pageNode);
+                ctx.graph.setNode(_this.createNode(ctx, tech), pageNode);
             }
 
             // link targets for page files with each other
@@ -198,7 +197,7 @@ var BundleNode = INHERIT(MagicNode, {
         if (this['create-node-' + tech]) {
             return this['create-node-' + tech](ctx, tech);
         }
-        return ctx.graph.setNode(new FileNode(this.getPath(tech)));
+        return new FileNode(this.getPath(tech));
     },
 
     linkNodes: function(ctx) {
@@ -251,33 +250,33 @@ var BundleNode = INHERIT(MagicNode, {
     },
 
     'create-node-bemdecl.js': function(ctx, tech) {
-        return ctx.graph.setNode(new BemCreateNode(this.level, this.item, tech));
+        return new BemCreateNode(this.level, this.item, tech, tech);
     },
 
     'create-node-deps.js': function(ctx, tech) {
-        return ctx.graph.setNode(this.getBemBuildNode(tech, tech, 'bemdecl.js'));
+        return this.getBemBuildNode(tech, tech, 'bemdecl.js');
     },
 
     'create-node-html': function(ctx, tech) {
         var techHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/html');
-        return ctx.graph.setNode(new BemCreateNode(this.level, this.item, techHtml, tech));
+        return new BemCreateNode(this.level, this.item, techHtml, tech);
     },
 
     'create-node-bemhtml.js': function(ctx, tech) {
         var techBemHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/bemhtml.js');
-        return ctx.graph.setNode(this.getBemBuildNode(tech, techBemHtml, 'deps.js'));
+        return this.getBemBuildNode(tech, techBemHtml, 'deps.js');
     },
 
     'create-node-js': function(ctx, tech) {
-        return ctx.graph.setNode(this.getBemBuildNode(tech, tech, 'deps.js'));
+        return this.getBemBuildNode(tech, tech, 'deps.js');
     },
 
     'create-node-css': function(ctx, tech) {
-        return ctx.graph.setNode(this.getBemBuildNode(tech, tech, 'deps.js'));
+        return this.getBemBuildNode(tech, tech, 'deps.js');
     },
 
     'create-node-ie.css': function(ctx, tech) {
-        return ctx.graph.setNode(this.getBemBuildNode(tech, tech, 'deps.js'));
+        return this.getBemBuildNode(tech, tech, 'deps.js');
     }
 
 });
