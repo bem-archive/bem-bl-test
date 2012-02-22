@@ -46,8 +46,8 @@ var Node = INHERIT({
     run: function(ctx) {
         var _this = this,
             method = ctx.method || 'make';
-        console.log("[*] %s '%s'", method, this.getId());
-        this.log("[=] Log of %s '%s'", method, this.getId());
+        console.log("[*] %s '%s' [%s]", method, this.getId(), ctx.plan.getId());
+        this.log("[=] Log of %s '%s' [%s]", method, this.getId(), ctx.plan.getId());
         return Q.invoke(this, method, ctx).then(function(res) {
             _this.dumpLog();
             return res;
