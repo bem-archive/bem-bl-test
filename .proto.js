@@ -1,4 +1,5 @@
 var Q = require('qq'),
+    FS = require('fs'),
     QFS = require('q-fs'),
     INHERIT = require('inherit'),
     PROTO = require('proto'),
@@ -46,17 +47,26 @@ var Node = INHERIT({
     run: function(ctx) {
         var _this = this,
             method = ctx.method || 'make';
-        console.log("[*] %s '%s' [%s]", method, this.getId(), ctx.plan.getId());
-        this.log("[=] Log of %s '%s' [%s]", method, this.getId(), ctx.plan.getId());
-        return Q.invoke(this, method, ctx).then(function(res) {
-            _this.dumpLog();
-            return res;
+
+        return Q.when(this.isValid(method, ctx), function(valid) {
+            if (valid) return;
+
+            console.log("[*] %s '%s' [%s]", method, _this.getId(), ctx.plan.getId());
+            _this.log("[=] Log of %s '%s' [%s]", method, _this.getId(), ctx.plan.getId());
+            return Q.invoke(_this, method, ctx).then(function(res) {
+                _this.dumpLog();
+                return res;
+            });
         });
     },
 
     make: function(ctx) {},
 
     clean: function(ctx) {},
+
+    isValid: function(method, ctx) {
+        return false;
+    },
 
     log: function(messages) {
         messages = Array.isArray(messages)? messages : [messages];
@@ -88,6 +98,33 @@ var FileNode = INHERIT(Node, {
         return QFS.exists(this.getId()).then(function(exists) {
             if (!exists) return Q.reject(UTIL.format("Path %j doesn't exist", _this.getId()));
         });
+    },
+
+    isValid: function(method, ctx) {
+        if (method != 'make') return false;
+
+        var _this = this,
+            cur = this.stat(),
+            done = ctx.graph.children[this.getId()].reduce(function(done, child) {
+                if (!child || !(child = ctx.graph.getNode(child).node) instanceof FileNode) return done;
+
+                return Q.all([child.stat(), done]).get(0);
+            }, undefined);
+
+        return Q.all([cur, done]).then(function(allTs) {
+            var curS = allTs.shift(),
+                cur = (curS.mtime && curS.mtime.getTime()) || -1, // NOTE: no file
+                max = Math.max.apply(Math, allTs.map(function(s) {
+                    return (s && s.mtime)? s.mtime.getTime() : 0;
+                }));
+
+            //console.log('*** isValid(%s): cur=%s, max=%s, valid=%s', _this.getId(), cur, max, cur > max);
+            return cur >= max;
+        });
+    },
+
+    stat: function() {
+        return QFS.stat(this.path);
     }
 
 });
@@ -120,6 +157,10 @@ var MagicNode = INHERIT(FileNode, {
 
     clean: function(ctx) {
         return this.make(ctx);
+    },
+
+    isValid: function(method, ctx) {
+        return false;
     }
 
 });
@@ -416,3 +457,29 @@ var BemBuildNode = INHERIT(GeneratedFileNode, {
     }
 
 });
+
+
+/**
+ * Own wrapper before issue in `q-fs` will be fixed or explained.
+ * See https://github.com/kriskowal/q-fs/issues/3
+ *
+ * @param {String} path
+ * @returns {Promise * Stat}
+ */
+QFS.stat = function(path) {
+    path = String(path);
+    var done = Q.defer();
+    try {
+        FS.stat(path, function (error, stat) {
+            if (error) {
+                error.message = "Can't stat " + JSON.stringify(path) + ": " + error;
+                done.reject(error);
+            } else {
+                done.resolve(stat);
+            }
+        });
+    } catch (error) {
+        done.reject(error);
+    }
+    return done.promise;
+};
