@@ -299,6 +299,10 @@ var BundleNode = INHERIT(MagicNode, {
         return new BemBuildNode(this.getLevels(), this.getPath(declTech), techPath, techName, this.getNodePrefix());
     },
 
+    getBemBuildForkedNode: function(techName, techPath, declTech) {
+        return new BemBuildForkedNode(this.getLevels(), this.getPath(declTech), techPath, techName, this.getNodePrefix());
+    },
+
     'create-node-bemdecl.js': function(ctx, tech) {
         return new BemCreateNode(this.level, this.item, tech, tech);
     },
@@ -314,7 +318,7 @@ var BundleNode = INHERIT(MagicNode, {
 
     'create-node-bemhtml.js': function(ctx, tech) {
         var techBemHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/bemhtml.js');
-        return this.getBemBuildNode(tech, techBemHtml, 'deps.js');
+        return this.getBemBuildForkedNode(tech, techBemHtml, 'deps.js');
     },
 
     'create-node-js': function(ctx, tech) {
@@ -364,7 +368,7 @@ var BlocksLibraryNode = INHERIT(Node, {
         return Q.when(up.promise, function() {
             // git checkout treeish
             var co = Q.defer();
-                cmd = UTIL.format('cd %s && git checkout %s', _this.path, _this.treeish);
+            cmd = UTIL.format('cd %s && git checkout %s', _this.path, _this.treeish);
 
             _this.log(cmd);
             CP.exec(cmd, function(err, stdout, stderr) {
@@ -458,6 +462,45 @@ var BemBuildNode = INHERIT(GeneratedFileNode, {
 
 });
 
+var BemBuildForkedNode = INHERIT(BemBuildNode, {
+    __constructor: function(levels, decl, techPath, techName, output) {
+        this.__base(levels, decl, techPath, techName, output);
+    },
+
+    make: function() {
+        var opts = {
+            level: this.levelsPaths,
+            declaration: this.decl,
+            tech: this.techPath,
+            outputDir: PATH.dirname(this.output),
+            outputName: PATH.basename(this.output)
+        };
+
+        this.log('bem.build(\n %j\n)', opts);
+
+        var cp = require('child_process'),
+            fork = cp.fork(PATH.join(__dirname, 'bembuild.js'), null, {env: process.env});
+
+        var d = Q.defer();
+        fork.on('exit', function(code) {
+            if (code === 0)
+                d.resolve();
+            else
+                d.reject();
+        });
+
+        process.on('message', function(m) {
+            if (m.code !== 0)
+                d.reject(m.msg)
+            else
+                d.resolve(m.msg);
+        });
+
+        fork.send(opts);
+
+        return d.promise;
+    }
+});
 
 /**
  * Own wrapper before issue in `q-fs` will be fixed or explained.
