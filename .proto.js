@@ -283,19 +283,14 @@ var BundleNode = INHERIT(MagicNode, {
         return this._nodeSuffix;
     },
 
-    getLevels: function() {
-        // TODO: move to config
-        // TODO: page level blocks: 'pages/example/blocks'
-        return [
-            'bem-bl/blocks-common/',
-            'bem-bl/blocks-desktop/',
-            'blocks/'
-        ];
+    getLevels: function(prefix) {
+        return [].concat(
+            this.level.getConfig().bundleBuildLevels,
+            [ PATH.join(PATH.dirname(prefix), 'blocks') ]);
     },
 
     getBemBuildNode: function(techName, techPath, declTech) {
-        // TODO: page level blocks: 'pages/example/blocks'
-        return new BemBuildNode(this.getLevels(), this.getPath(declTech), techPath, techName, this.getNodePrefix());
+        return new BemBuildNode(this.getLevels(this.getNodePrefix()), this.getPath(declTech), techPath, techName, this.getNodePrefix());
     },
 
     'create-node-bemdecl.js': function(ctx, tech) {
