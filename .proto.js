@@ -1,8 +1,7 @@
 var Q = require('qq'),
-    FS = require('fs'),
     QFS = require('q-fs'),
     INHERIT = require('inherit'),
-    PROTO = require('proto'),
+    SAMURAI = require('samurai'),
     BEM = require('bem').api,
     createLevel = require('bem/lib/level').createLevel,
     Context = require('bem/lib/context').Context,
@@ -11,7 +10,7 @@ var Q = require('qq'),
     UTIL = require('util');
 
 exports.getGraph = function() {
-    var graph = new PROTO.Graph(),
+    var graph = new SAMURAI.Graph(),
         all = graph.setNode(new Node('all')),
         build = graph.setNode(new Node('build'), all),
         libs = createBlockLibrariesNodes(graph, build);

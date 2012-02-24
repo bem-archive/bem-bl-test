@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "bem": "https://github.com/bem/bem-tools/tarball/nodejs",
-    "proto": "https://github.com/afelix/sandbox2/tarball/master",
+    "samurai": "https://github.com/afelix/samurai/tarball/master",
     "qq": "0.3",
     "q-fs": "0.1",
     "inherit": "1"
