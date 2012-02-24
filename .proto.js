@@ -201,9 +201,6 @@ var BundlesLevelNode = INHERIT(MagicNode, {
             });
 
         }, this);
-
-//        console.log('== BundlesLevelNode Graph ==\n', ctx.graph.toString());
-//        console.log('== BundlesLevelNode Plan ==\n', ctx.plan.toString());
     }
 
 });
@@ -237,9 +234,6 @@ var BundleNode = INHERIT(MagicNode, {
             this.linkNodes(ctx);
 
         }, this);
-
-//        console.log('=== BundleNode Graph ===\n', ctx.graph.toString());
-//        console.log('=== BundleNode Plan ===\n', ctx.plan.toString());
     },
 
     createNode: function(ctx, tech) {
