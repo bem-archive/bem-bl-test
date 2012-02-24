@@ -190,15 +190,7 @@ var BundlesLevelNode = INHERIT(LevelNode, {
             // generate targets for pages
             var _this = this;
             decl.forEach(function(block) {
-                // generate FileNode based page targets for emply pages
-                // (without techs implementation)
-                var pageNode;
-                // TODO: такие блоки и не попадут в инстроспекцию
-                if (block.techs) {
-                    pageNode = ctx.graph.setNode(new BundleNode(_this.level, block.name), pageLevelNode);
-                } else {
-                    pageNode = ctx.graph.setNode(new FileNode(PATH.join(_this.level, block.name)), pageLevelNode);
-                }
+                var pageNode = ctx.graph.setNode(new BundleNode(_this.level, block.name), pageLevelNode);
 
                 // generate targets for subpages
                 if (block.elems) block.elems.forEach(function(elem) {
