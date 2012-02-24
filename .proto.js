@@ -47,7 +47,7 @@ var Node = INHERIT({
         var _this = this,
             method = ctx.method || 'make';
 
-        return Q.when(this.isValid(method, ctx), function(valid) {
+        return Q.when(this.isValid(ctx), function(valid) {
             if (valid) return;
 
             console.log("[*] %s '%s' [%s]", method, _this.getId(), ctx.plan.getId());
@@ -63,7 +63,7 @@ var Node = INHERIT({
 
     clean: function(ctx) {},
 
-    isValid: function(method, ctx) {
+    isValid: function(ctx) {
         return false;
     },
 
@@ -87,43 +87,52 @@ var Node = INHERIT({
 
 var FileNode = INHERIT(Node, {
 
-    __constructor: function(path) {
+    __constructor: function(path, optional) {
         this.path = path;
+        this.optional = optional || false;
         this.__base(path);
     },
 
     make: function() {
+        if (this.optional) return;
+
         var _this = this;
         return QFS.exists(this.getId()).then(function(exists) {
             if (!exists) return Q.reject(UTIL.format("Path %j doesn't exist", _this.getId()));
         });
     },
 
-    isValid: function(method, ctx) {
-        if (method != 'make') return false;
+    isValid: function(ctx) {
+        if (ctx.method != 'make') return false;
+        if (ctx.force) return false;
 
-        var _this = this,
-            cur = this.stat(),
-            done = ctx.graph.children[this.getId()].reduce(function(done, child) {
-                if (!child || !(child = ctx.graph.getNode(child).node) instanceof FileNode) return done;
+        var parent = this.lastModified(),
+            children = ctx.graph.children[this.getId()]
+                .filter(function(child) {
+                    return (child && (ctx.graph.getNode(child).node) instanceof FileNode);
+                })
+                .map(function(child) {
+                    return ctx.graph.getNode(child).node.lastModified();
+                });
 
-                return Q.all([child.stat(), done]).get(0);
-            }, undefined);
+        // with no deps we must always check for file existance
+        // isValid() == false will guarantee it
+        if (!children.length) return false;
 
-        return Q.all([cur, done]).then(function(allTs) {
-            var curS = allTs.shift(),
-                cur = (curS.mtime && curS.mtime.getTime()) || -1, // NOTE: no file
-                max = Math.max.apply(Math, allTs.map(function(s) {
-                    return (s && s.mtime)? s.mtime.getTime() : 0;
-                }));
+        //var _this = this;
+        return Q.all([parent].concat(children)).then(function(all) {
+            var cur = all.shift(),
+                max = Math.max.apply(Math, all);
 
-            //console.log('*** isValid(%s): cur=%s, max=%s, valid=%s', _this.getId(), cur, max, cur > max);
-            return cur >= max;
+            //console.log('*** isValid(%s): cur=%s, max=%s, valid=%s', _this.getId(), cur, max, cur >= max && max > -1);
+            return cur >= max && max > -1;
         });
     },
 
-    stat: function() {
-        return QFS.stat(this.path);
+    lastModified: function() {
+        return QFS.lastModified(this.path).fail(function(err) {
+            return -1;
+        });
     }
 
 });
@@ -158,7 +167,7 @@ var MagicNode = INHERIT(FileNode, {
         return this.make(ctx);
     },
 
-    isValid: function(method, ctx) {
+    isValid: function(ctx) {
         return false;
     }
 
@@ -443,29 +452,3 @@ var BemBuildNode = INHERIT(GeneratedFileNode, {
     }
 
 });
-
-
-/**
- * Own wrapper before issue in `q-fs` will be fixed or explained.
- * See https://github.com/kriskowal/q-fs/issues/3
- *
- * @param {String} path
- * @returns {Promise * Stat}
- */
-QFS.stat = function(path) {
-    path = String(path);
-    var done = Q.defer();
-    try {
-        FS.stat(path, function (error, stat) {
-            if (error) {
-                error.message = "Can't stat " + JSON.stringify(path) + ": " + error;
-                done.reject(error);
-            } else {
-                done.resolve(stat);
-            }
-        });
-    } catch (error) {
-        done.reject(error);
-    }
-    return done.promise;
-};
