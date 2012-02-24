@@ -164,14 +164,20 @@ var MagicNode = INHERIT(FileNode, {
 
 });
 
-var BundlesLevelNode = INHERIT(MagicNode, {
+var LevelNode = INHERIT(MagicNode, {
 
     __constructor: function(level) {
         this.level = typeof level == 'string'? createLevel(level) : level;
         this.__base(PATH.basename(this.level.dir));
-    },
+    }
+
+});
+
+var BundlesLevelNode = INHERIT(LevelNode, {
 
     make: function(ctx) {
+        if (ctx.graph.hasNode(this.path)) return;
+
         ctx.graph.withLock(function() {
 
             // create real node for pages level
