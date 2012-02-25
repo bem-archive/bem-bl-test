@@ -457,6 +457,24 @@ var BemBuildNode = INHERIT(GeneratedFileNode, {
 
 });
 
+var BemBuildDepsNode = INHERIT(BemBuildNode, {
+
+    getId: function() {
+        return this.id + '!';
+    },
+
+    make: function(ctx) {
+        // get tech object
+        // get prefixes
+        // get paths
+        // clean not actual dependencies
+        // create nodes for all paths: FileNode(path, true); use replaceNode()
+        // link created nodes to BemBuildNode corresponding to this node
+        // remember created nodes
+    }
+
+});
+
 var BemBuildForkedNode = INHERIT(BemBuildNode, {
 
     make: function() {
