@@ -470,15 +470,15 @@ var BemBuildForkedNode = INHERIT(BemBuildNode, {
 
         this.log('bem.build(\n %j\n)', opts);
 
-        var cp = require('child_process'),
-            worker = cp.fork(PATH.join(__dirname, 'bembuild.js'), null, { env: process.env });
+        var d = Q.defer(),
+            worker = require('child_process')
+                .fork(PATH.join(__dirname, 'bembuild.js'), null, { env: process.env });
 
-        var d = Q.defer();
         worker.on('exit', function(code) {
             (code === 0)? d.resolve() : d.reject();
         });
 
-        process.on('message', function(m) {
+        worker.on('message', function(m) {
             (m.code !== 0)? d.reject(m.msg) : d.resolve(m.msg);
         });
 
