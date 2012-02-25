@@ -429,7 +429,7 @@ var BemBuildNode = INHERIT(GeneratedFileNode, {
     __constructor: function(levels, decl, techPath, techName, output) {
         this.levelsPaths = levels;
         this.levels = levels.map(function(l) {
-            return createLevel(l);
+            return typeof l == 'string'? createLevel(l) : l;
         });
         this.decl = decl;
         this.techPath = techPath;
