@@ -9,16 +9,13 @@ var Q = require('qq'),
     CP = require('child_process'),
     UTIL = require('util');
 
-exports.getGraph = function() {
-    var graph = new SAMURAI.Graph(),
-        all = graph.setNode(new Node('all')),
-        build = graph.setNode(new Node('build'), all),
-        libs = createBlockLibrariesNodes(graph, build);
-    createBundlesLevelsNodes(graph, build, libs);
+exports.graph = function() {
+    var all = this.setNode(new Node('all')),
+        build = this.setNode(new Node('build'), all),
+        libs = createBlockLibrariesNodes(this, build);
+    createBundlesLevelsNodes(this, build, libs);
 
-    console.log('== Graph on build start ==\n', graph.toString());
-
-    return graph;
+    console.log('== Graph on build start ==\n', this.toString());
 };
 
 function createBlockLibrariesNodes(graph, parent) {
@@ -307,12 +304,12 @@ var BundleNode = INHERIT(MagicNode, {
     },
 
     'create-node-html': function(ctx, tech) {
-        var techHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/html');
+        var techHtml = require.resolve('../bem-bl/blocks-common/i-bem/bem/techs/html');
         return new BemCreateNode(this.level, this.item, techHtml, tech);
     },
 
     'create-node-bemhtml.js': function(ctx, tech) {
-        var techBemHtml = require.resolve('./bem-bl/blocks-common/i-bem/bem/techs/bemhtml.js');
+        var techBemHtml = require.resolve('../bem-bl/blocks-common/i-bem/bem/techs/bemhtml.js');
         return this.getBemBuildForkedNode(tech, techBemHtml, 'deps.js');
     },
 
@@ -391,7 +388,7 @@ var BemCreateNode = INHERIT(GeneratedFileNode, {
 
     make: function() {
         var p = this.parseItem(this.item);
-        p.opts.levelDir = this.level.dir;
+        p.opts.level = this.level.dir;
         p.opts.forceTech = this.tech.getTechPath();
 
         this.log('bem.create.%s(\n %j,\n %j\n)', p.cmd, p.opts, p.args);

@@ -10,8 +10,7 @@
     "node": "0.6 | 0.7"
   },
   "dependencies": {
-    "bem": "https://github.com/bem/bem-tools/tarball/nodejs",
-    "samurai": "https://github.com/afelix/samurai/tarball/master",
+    "bem": "https://github.com/bem/bem-tools/tarball/server",
     "qq": "0.3",
     "q-fs": "0.1",
     "inherit": "1"
