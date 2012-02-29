@@ -1,10 +1,9 @@
 var Q = require('qq'),
     QFS = require('q-fs'),
     INHERIT = require('inherit'),
-    SAMURAI = require('samurai'),
     BEM = require('bem').api,
-    createLevel = require('bem/lib/level').createLevel,
-    Context = require('bem/lib/context').Context,
+    createLevel = require('bem').createLevel,
+    Context = require('bem').Context,
     PATH = require('path'),
     CP = require('child_process'),
     UTIL = require('util');
