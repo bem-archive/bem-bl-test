@@ -43,6 +43,7 @@ var Node = INHERIT({
         var _this = this,
             method = ctx.method || 'make';
 
+        this.clearLog();
         return Q.when(this.isValid(ctx), function(valid) {
             if (valid) return;
 
@@ -69,6 +70,10 @@ var Node = INHERIT({
         this.messages = (this.messages || []).concat(messages.map(function(message) {
             return UTIL.format.apply(this, [message].concat(args));
         }));
+    },
+
+    clearLog: function() {
+        delete this.messages;
     },
 
     formatLog: function() {
