@@ -99,7 +99,7 @@ var FileNode = INHERIT(Node, {
     },
 
     isValid: function(ctx) {
-        if (ctx.method != 'make') return false;
+        if (ctx.method && ctx.method != 'make') return false;
         if (ctx.force) return false;
 
         var parent = this.lastModified(),
