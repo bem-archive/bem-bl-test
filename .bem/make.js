@@ -3,7 +3,7 @@ var n = require('bem').nodes,
     BundlesLevelNode = n.BundlesLevelNode,
     LibraryNode = n.LibraryNode;
 
-exports.graph = function() {
+exports.arch = function() {
     var all = this.setNode(new Node('all')),
         build = this.setNode(new Node('build'), all),
         libs = createBlockLibrariesNodes(this, build);
@@ -12,14 +12,14 @@ exports.graph = function() {
     console.log('== Graph on build start ==\n', this.toString());
 };
 
-function createBlockLibrariesNodes(graph, parent) {
+function createBlockLibrariesNodes(arch, parent) {
     return [
-        graph.setNode(new LibraryNode('bem-bl', 'git://github.com/bem/bem-bl.git'), parent)
+        arch.setNode(new LibraryNode('bem-bl', 'git://github.com/bem/bem-bl.git'), parent)
     ];
 }
 
-function createBundlesLevelsNodes(graph, parent, children) {
+function createBundlesLevelsNodes(arch, parent, children) {
     return [
-        graph.setNode(new BundlesLevelNode('pages'), parent, children)
+        arch.setNode(new BundlesLevelNode('pages'), parent, children)
     ];
 }
