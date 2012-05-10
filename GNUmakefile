@@ -1,6 +1,9 @@
-all:: bem-bl
+all:: bem-bl ojs
 all:: $(patsubst %.bemjson.js,%.html,$(wildcard pages/*/*.bemjson.js))
 
+CSSO=./node_modules/csso/bin/csso
+UGLIFY=./node_modules/uglify-js/bin/uglifyjs
+BORSCHIK=./node_modules/borschik/bin/borschik
 BEM=bem
 
 BEM_BUILD=$(BEM) build \
@@ -53,7 +56,17 @@ DO_GIT=@echo -- git $1 $2; \
 			git clone $1 $2; \
 	fi
 
+ojs:
+	find_files = $(wildcard $(dir)/*)
+	dirs := example client
+	files := $(foreach dir,$(dirs),$(find_files))
+
+
 bem-bl:
+#   $(BORSCHIK) -t css -i a.css -o _a.css
+#	$(CSSO) csso -i a.js -o b.js
+#	$(UGLIFY) -b -ns -nm a.js > b.js
 	$(call DO_GIT,git://github.com/bem/bem-bl.git,$@)
+
 
 .PHONY: all
