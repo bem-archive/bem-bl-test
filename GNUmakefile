@@ -1,9 +1,17 @@
-all:: bem-bl ojs
-all:: $(patsubst %.bemjson.js,%.html,$(wildcard pages/*/*.bemjson.js))
+OPTIMIZED=$(foreach F,$1,$(dir $F)_$(notdir $F).$2)
 
-CSSO=./node_modules/csso/bin/csso
-UGLIFY=./node_modules/uglify-js/bin/uglifyjs
-BORSCHIK=./node_modules/borschik/bin/borschik
+BJSON := $(wildcard pages/*/*.bemjson.js)
+HTML_O := $(patsubst %.bemjson.js,%.html,$(BJSON))
+PREFIXES := $(patsubst %.bemjson.js,%,$(BJSON))
+JS_O = $(call OPTIMIZED,$(PREFIXES),js)
+CSS_O = $(call OPTIMIZED,$(PREFIXES),css)
+
+all:: bem-bl
+all:: $(HTML_O) $(JS_O) $(CSS_O)
+
+CSSO_PATH=./node_modules/csso/bin/csso
+UGLIFYJS_PATH=./node_modules/uglify-js/bin/uglifyjs
+BORSCHIK_PATH=./node_modules/borschik/bin/borschik
 BEM=bem
 
 BEM_BUILD=$(BEM) build \
@@ -56,17 +64,17 @@ DO_GIT=@echo -- git $1 $2; \
 			git clone $1 $2; \
 	fi
 
-ojs:
-	find_files = $(wildcard $(dir)/*)
-	dirs := example client
-	files := $(foreach dir,$(dirs),$(find_files))
-
-
 bem-bl:
-#   $(BORSCHIK) -t css -i a.css -o _a.css
-#	$(CSSO) csso -i a.js -o b.js
-#	$(UGLIFY) -b -ns -nm a.js > b.js
 	$(call DO_GIT,git://github.com/bem/bem-bl.git,$@)
 
 
 .PHONY: all
+
+_%.js: %.js
+	$(UGLIFYJS_PATH) $< > $@
+
+_%.css: %.css
+	touch tempfile
+	$(BORSCHIK_PATH) -t css -i $< -o tempfile
+	$(CSSO_PATH) -i tempfile -o $@
+	-@rm tempfile
