@@ -7,13 +7,13 @@
     "url": "git://github.com/bem/bem-bl-test.git"
   },
   "engines": {
-    "node": "=> 0.4.0 <0.7.0"
+    "node": "0.6 | 0.7"
   },
   "dependencies": {
-    "xjst": "0.2.x",
-    "csso": "1.2.x",
+    "xjst": "~0.2.21",
+    "csso": "~1.2.12",
     "borschik": "~0.0.7",
-    "uglify-js": "~1.2.x"
+    "uglify-js": "~1.2.6"
   },
   "devDependencies": {},
   "optionalDependencies": {},
