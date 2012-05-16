@@ -75,6 +75,5 @@ _%.js: %.js
 	$(UGLIFYJS_PATH) $< > $@
 
 _%.css: %.css
-	echo $(TEMPFILE)
 	$(BORSCHIK_PATH) -t css -i $< -o $(TEMPFILE)
 	$(CSSO_PATH) -i $(TEMPFILE) -o $@
