@@ -12,7 +12,7 @@
   "dependencies": {
     "bem": "https://github.com/bem/bem-tools/tarball/server",
     "qq": "0.3",
-    "q": "0.8.2",
+    "q": "~0.8.5",
     "q-fs": "0.1",
     "inherit": "1"
   },
