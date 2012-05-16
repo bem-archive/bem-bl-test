@@ -1,13 +1,16 @@
+TEMPDIR := $(shell mktemp -d $(TMPDIR)/.XXXXX)
+TEMPFILE = $(TEMPDIR)/bem-bl-test-csso-tempfile
+
 OPTIMIZED=$(foreach F,$1,$(dir $F)_$(notdir $F).$2)
 
 BJSON := $(wildcard pages/*/*.bemjson.js)
-HTML_O := $(patsubst %.bemjson.js,%.html,$(BJSON))
+HTML := $(patsubst %.bemjson.js,%.html,$(BJSON))
 PREFIXES := $(patsubst %.bemjson.js,%,$(BJSON))
 JS_O = $(call OPTIMIZED,$(PREFIXES),js)
 CSS_O = $(call OPTIMIZED,$(PREFIXES),css)
 
 all:: bem-bl
-all:: $(HTML_O) $(JS_O) $(CSS_O)
+all:: $(HTML) $(JS_O) $(CSS_O)
 
 CSSO_PATH=./node_modules/csso/bin/csso
 UGLIFYJS_PATH=./node_modules/uglify-js/bin/uglifyjs
@@ -55,7 +58,6 @@ BEM_CREATE=$(BEM) create block \
 %.js: %.deps.js
 	$(call BEM_BUILD,js)
 
-
 DO_GIT=@echo -- git $1 $2; \
 	if [ -d $2 ]; \
 		then \
@@ -67,14 +69,12 @@ DO_GIT=@echo -- git $1 $2; \
 bem-bl:
 	$(call DO_GIT,git://github.com/bem/bem-bl.git,$@)
 
-
 .PHONY: all
 
 _%.js: %.js
 	$(UGLIFYJS_PATH) $< > $@
 
 _%.css: %.css
-	touch tempfile
-	$(BORSCHIK_PATH) -t css -i $< -o tempfile
-	$(CSSO_PATH) -i tempfile -o $@
-	-@rm tempfile
+	echo $(TEMPFILE)
+	$(BORSCHIK_PATH) -t css -i $< -o $(TEMPFILE)
+	$(CSSO_PATH) -i $(TEMPFILE) -o $@
