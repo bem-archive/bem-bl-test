@@ -1,6 +1,3 @@
-TEMPDIR := $(shell mktemp -d $(TMPDIR)/.XXXXX)
-TEMPFILE = $(TEMPDIR)/bem-bl-test-csso-tempfile
-
 OPTIMIZED=$(foreach F,$1,$(dir $F)_$(notdir $F).$2)
 
 BJSON := $(wildcard pages/*/*.bemjson.js)
@@ -75,5 +72,4 @@ _%.js: %.js
 	$(UGLIFYJS_PATH) $< > $@
 
 _%.css: %.css
-	$(BORSCHIK_PATH) -t css -i $< -o $(TEMPFILE)
-	$(CSSO_PATH) -i $(TEMPFILE) -o $@
+	tmp=$$(mktemp -d $(TMPDIR).XXXXX)/bem-bl-test-csso-tempfile; $(BORSCHIK_PATH) -t css -i $< -o $$tmp && $(CSSO_PATH) -i $$tmp -o $@
