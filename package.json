@@ -10,7 +10,9 @@
     "node": "0.6 | 0.7"
   },
   "dependencies": {
-    "bem": "https://github.com/bem/bem-tools/tarball/server",
+    "bem": "~0.5.6",
+    "ometajs": "~2.1.10",
+    "xjst": "~0.2.21",
     "qq": "0.3",
     "q": "~0.8.5",
     "q-fs": "0.1",
