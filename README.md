@@ -48,6 +48,16 @@ or force rebuild by running
 
     bem make pages/example/example.html --force
 
+You can also use GNU make proxy to `bem make`. Here are some examples
+
+    make
+    make clean
+    make pages/example/example.html
+
+To rebuild all files run (specifying `-B` option to `make` will not work).
+
+    make clean all
+
 ## bem server
 
 To build your project dynamically run
