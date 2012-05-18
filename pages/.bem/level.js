@@ -8,10 +8,10 @@ exports.getTechs = function() {
 
 exports.getConfig = function() {
     return extend({}, this.__base() || {}, {
-        bundleBuildLevels: [
-            'bem-bl/blocks-common',
-            'bem-bl/blocks-desktop',
-            'blocks'
-        ]
+        bundleBuildLevels: this.resolvePaths([
+            '../../bem-bl/blocks-common',
+            '../../bem-bl/blocks-desktop',
+            '../../blocks'
+        ])
     });
 };
