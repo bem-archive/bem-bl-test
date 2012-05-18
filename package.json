@@ -16,7 +16,10 @@
     "qq": "0.3",
     "q": "~0.8.5",
     "q-fs": "0.1",
-    "inherit": "1"
+    "inherit": "1",
+    "csso": "~1.2.12",
+    "borschik": "~0.0.9",
+    "uglify-js": "~1.2.6"
   },
   "devDependencies": {},
   "optionalDependencies": {},
