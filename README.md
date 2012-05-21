@@ -36,7 +36,7 @@ To build your project run
 
     bem make
 
-This will build all files. Sequiental executions of `bem make` will rebuild nothing but you can force rebuild by running
+This will build all files. Sequental executions of `bem make` will rebuild nothing but you can force rebuild by running
 
     bem make --force
 
