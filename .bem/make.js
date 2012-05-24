@@ -1,15 +1,17 @@
-/*
+// Link up bem-bl
+MAKE.decl('Arch', {
 
-MAKE.decl('MyCustomNode', MyCustomNode);
+    getLibraries: function() {
 
-MAKE.decl('LevelClassName', {
+        return {
+            'bem-bl': {
+                type: 'git',
+                url: 'git://github.com/bem/bem-bl.git',
+                // NOTE: Will be renamed in the nearest future
+                treeish: 'server'
+            }
+        };
 
-    prop: null,
-
-    method: function() {
-        return this.__base();
     }
 
 });
-
-*/
