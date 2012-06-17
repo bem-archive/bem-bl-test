@@ -8,7 +8,7 @@ MAKE.decl('Arch', {
                 type: 'git',
                 url: 'git://github.com/bem/bem-bl.git',
                 // NOTE: Will be renamed in the nearest future
-                treeish: 'server'
+                treeish: 'feature-new-ometa'
             }
         };
 
