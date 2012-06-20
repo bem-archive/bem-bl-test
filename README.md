@@ -13,7 +13,7 @@ Prerequisites:
 
 Clone git repo
 
-    git clone git://github.com/bem/bem-bl-test.git -b server
+    git clone git://github.com/bem/bem-bl-test.git
 
 Install dependencies
 
