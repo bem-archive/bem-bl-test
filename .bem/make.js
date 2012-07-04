@@ -7,7 +7,7 @@ MAKE.decl('Arch', {
             'bem-bl': {
                 type: 'git',
                 url: 'git://github.com/bem/bem-bl.git',
-                treeish: '0.2'
+                treeish: 'i18n'
             }
         };
 
@@ -19,7 +19,15 @@ MAKE.decl('Arch', {
 MAKE.decl('BundleNode', {
 
     getTechs: function() {
-        return this.__base().concat(['i18n', 'i18n.js']);
+
+        var arr = this.__base();
+
+        // remove js tech
+        arr.splice(arr.indexOf('js'), 1);
+
+        // add i18n techs
+        return arr.concat(['i18n', 'i18n.js']);
+
     }
 
 });
