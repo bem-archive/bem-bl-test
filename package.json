@@ -10,7 +10,8 @@
     "node": "0.6 | 0.7 | 0.8"
   },
   "dependencies": {
-    "bem": "https://github.com/bem/bem-tools/tarball/i18n-2"
+    "bem": "https://github.com/bem/bem-tools/tarball/i18n-2",
+    "dom-js": "*"
   },
   "devDependencies": {},
   "optionalDependencies": {},
