@@ -14,3 +14,12 @@ MAKE.decl('Arch', {
     }
 
 });
+
+// Build i18n files
+MAKE.decl('BundleNode', {
+
+    getTechs: function() {
+        return this.__base().concat(['i18n', 'i18n.js']);
+    }
+
+});
