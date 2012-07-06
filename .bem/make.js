@@ -28,6 +28,14 @@ MAKE.decl('BundleNode', {
         // add i18n techs
         return arr.concat(['i18n', 'i18n.js']);
 
+    },
+
+    'create-i18n.js-optimizer-node': function(tech, sourceNode, bundleNode) {
+
+        sourceNode.getFiles().forEach(function(f) {
+            this['create-js-optimizer-node'](tech, this.ctx.arch.getNode(f), bundleNode);
+        }, this);
+
     }
 
 });
