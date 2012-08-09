@@ -25,8 +25,11 @@ MAKE.decl('BundleNode', {
         // remove js tech
         arr.splice(arr.indexOf('js'), 1);
 
+        // remove html tech
+        arr.splice(arr.indexOf('html'), 1);
+
         // add i18n techs
-        return arr.concat(['i18n', 'i18n.js']);
+        return arr.concat(['i18n', 'i18n.js', 'i18n.html']);
 
     },
 
@@ -35,6 +38,16 @@ MAKE.decl('BundleNode', {
         sourceNode.getFiles().forEach(function(f) {
             this['create-js-optimizer-node'](tech, this.ctx.arch.getNode(f), bundleNode);
         }, this);
+
+    },
+
+    'create-i18n.html-node': function(tech, bundleNode, magicNode) {
+
+        return this.setBemCreateNode(
+            tech,
+            this.level.resolveTech(tech),
+            bundleNode,
+            magicNode);
 
     }
 
