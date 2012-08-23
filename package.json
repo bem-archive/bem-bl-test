@@ -7,10 +7,11 @@
     "url": "git://github.com/bem/bem-bl-test.git"
   },
   "engines": {
-    "node": "0.6 | 0.7"
+    "node": "0.6 | 0.7 | 0.8 | 0.9"
   },
   "dependencies": {
-    "bem": "~0.5.9"
+    "bem": "~0.5.13",
+    "dom-js": "*"
   },
   "devDependencies": {},
   "optionalDependencies": {},
