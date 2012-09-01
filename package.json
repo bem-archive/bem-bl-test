@@ -12,7 +12,7 @@
   "dependencies": {
     "bem": "~0.5.14",
     "ometajs": "~2.1.10",
-    "xjst": "~0.3.3",
+    "xjst": "0.2.21",
     "dom-js": "*"
   },
   "devDependencies": {},
