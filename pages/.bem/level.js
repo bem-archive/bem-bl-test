@@ -8,7 +8,7 @@ exports.getTechs = function() {
     return {
         'bemjson.js': '',
         'js': 'js-i',
-        'bemhtml.js': PATH.join(BEM_TECHS, 'bemhtml.js'),
+        'bemhtml': PATH.join(BEM_TECHS, 'bemhtml.js'),
         'html': PATH.join(BEM_TECHS, 'html.js'),
         'i18n': PATH.join(BEM_TECHS, 'i18n.js'),
         'i18n.js': PATH.join(BEM_TECHS, 'i18n.js.js'),
