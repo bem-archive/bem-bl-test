@@ -1,4 +1,5 @@
 *.iml
+.bem/cache/
 node_modules/
 bem-bl
 pages/*/*.css
