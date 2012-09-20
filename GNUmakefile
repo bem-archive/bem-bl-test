@@ -1,8 +1,12 @@
 .DEFAULT_GOAL := all
 BEM := ./node_modules/.bin/bem
 
+ifneq (,$(findstring B,$(MAKEFLAGS)))
+BEM_FLAGS := --force
+endif
+
 %::
-	$(BEM) make $@
+	$(if $(findstring GNUmakefile,$@),,$(BEM) make $@ $(BEM_FLAGS))
 
 .PHONY: clean
 clean::
